@@ -1,0 +1,37 @@
+{
+  "model_file": "gdm_model.txt",
+  "calibrator_file": "calibrator.joblib",
+  "use_calibration": true,
+  "feature_names": [
+    "Age",
+    "No of Pregnancy",
+    "Gestation in previous Pregnancy",
+    "BMI",
+    "HDL",
+    "Family History",
+    "unexplained prenetal loss",
+    "Large Child or Birth Default",
+    "PCOS",
+    "Sys BP",
+    "Dia BP",
+    "OGTT",
+    "Hemoglobin",
+    "Sedentary Lifestyle",
+    "Prediabetes",
+    "MAP",
+    "BMI_category"
+  ],
+  "target": "Class Label(GDM /Non GDM)",
+  "optimal_threshold": 0.75,
+  "risk_tiers": {
+    "method": "ogtt_availability_based",
+    "threshold_high": 0.75,
+    "rule": {
+      "has_ogtt + prob < threshold": "Thấp",
+      "has_ogtt + prob >= threshold": "Cao",
+      "OGTT missing": "Trung bình — cần OGTT để xác định"
+    },
+    "rationale": "Probability distribution bimodal do dataset có OGTT separation rất cao. Tier dựa trên OGTT availability match spirit đề tài (sàng lọc tiền-OGTT) và cho tier Trung bình có ý nghĩa clinical thật (uncertainty từ thiếu gold standard)."
+  },
+  "scale_pos_weight": 1.5671175858480748
+}

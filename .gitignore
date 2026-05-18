@@ -1,0 +1,61 @@
+# ===== Secrets =====
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+!backend/.env.example
+!frontend/.env.example
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+venv/
+.venv/
+env/
+ENV/
+
+# ===== Node / Frontend =====
+node_modules/
+dist/
+dist-ssr/
+*.local
+.eslintcache
+.vite/
+
+# ===== Logs =====
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Editor / OS =====
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ===== Project-specific =====
+# Báo cáo / tài liệu nháp (không cần cho code chạy)
+report/
+sample_thesis.pdf
+sample_thesis.txt
+sample_thesis_utf8.txt
+plan.json
+
+# Backend cache
+backend/.pytest_cache/

@@ -1,0 +1,96 @@
+{
+  "info": {
+    "name": "GDM Diagnosis API",
+    "description": "ĐATN — Backend chẩn đoán Tiểu đường thai kỳ với LightGBM + XAI",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000"}
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "request": {"method": "GET", "url": "{{base_url}}/"}
+    },
+    {
+      "name": "Model info",
+      "request": {"method": "GET", "url": "{{base_url}}/info"}
+    },
+    {
+      "name": "Predict — LOW risk patient",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/predict?patient_id=demo-low-001",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Age\": 28,\n  \"No of Pregnancy\": 1,\n  \"Gestation in previous Pregnancy\": 0,\n  \"BMI\": 23.5,\n  \"HDL\": 55.0,\n  \"Family History\": 0,\n  \"unexplained prenetal loss\": 0,\n  \"Large Child or Birth Default\": 0,\n  \"PCOS\": 0,\n  \"Sys BP\": 110.0,\n  \"Dia BP\": 70,\n  \"OGTT\": 120.0,\n  \"Hemoglobin\": 12.5,\n  \"Sedentary Lifestyle\": 0,\n  \"Prediabetes\": 0\n}"
+        }
+      }
+    },
+    {
+      "name": "Predict — HIGH risk patient",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/predict?patient_id=demo-high-001",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Age\": 38,\n  \"No of Pregnancy\": 3,\n  \"Gestation in previous Pregnancy\": 2,\n  \"BMI\": 32.0,\n  \"HDL\": 38.0,\n  \"Family History\": 1,\n  \"unexplained prenetal loss\": 1,\n  \"Large Child or Birth Default\": 1,\n  \"PCOS\": 1,\n  \"Sys BP\": 145.0,\n  \"Dia BP\": 95,\n  \"OGTT\": 220.0,\n  \"Hemoglobin\": 11.0,\n  \"Sedentary Lifestyle\": 1,\n  \"Prediabetes\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "Predict — MEDIUM (OGTT chưa đo)",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/predict?patient_id=demo-medium-001",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Age\": 30,\n  \"No of Pregnancy\": 2,\n  \"Gestation in previous Pregnancy\": 1,\n  \"BMI\": 27.0,\n  \"HDL\": 45.0,\n  \"Family History\": 0,\n  \"unexplained prenetal loss\": 0,\n  \"Large Child or Birth Default\": 0,\n  \"PCOS\": 0,\n  \"Sys BP\": 125.0,\n  \"Dia BP\": 80,\n  \"OGTT\": null,\n  \"Hemoglobin\": 12.0,\n  \"Sedentary Lifestyle\": 0,\n  \"Prediabetes\": 0\n}"
+        }
+      }
+    },
+    {
+      "name": "SHAP Local — full waterfall",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/shap-local",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Age\": 38,\n  \"No of Pregnancy\": 3,\n  \"Gestation in previous Pregnancy\": 2,\n  \"BMI\": 32.0,\n  \"HDL\": 38.0,\n  \"Family History\": 1,\n  \"unexplained prenetal loss\": 1,\n  \"Large Child or Birth Default\": 1,\n  \"PCOS\": 1,\n  \"Sys BP\": 145.0,\n  \"Dia BP\": 95,\n  \"OGTT\": 220.0,\n  \"Hemoglobin\": 11.0,\n  \"Sedentary Lifestyle\": 1,\n  \"Prediabetes\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "What-If — KB1 HIGH giảm OGTT 220→110",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/what-if",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"original\": {\n    \"Age\": 38,\n    \"No of Pregnancy\": 3,\n    \"Gestation in previous Pregnancy\": 2,\n    \"BMI\": 32.0,\n    \"HDL\": 38.0,\n    \"Family History\": 1,\n    \"unexplained prenetal loss\": 1,\n    \"Large Child or Birth Default\": 1,\n    \"PCOS\": 1,\n    \"Sys BP\": 145.0,\n    \"Dia BP\": 95,\n    \"OGTT\": 220.0,\n    \"Hemoglobin\": 11.0,\n    \"Sedentary Lifestyle\": 1,\n    \"Prediabetes\": 1\n  },\n  \"changes\": {\"OGTT\": 110.0}\n}"
+        }
+      }
+    },
+    {
+      "name": "What-If — KB3 MEDIUM thêm OGTT=120",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/what-if",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"original\": {\n    \"Age\": 30,\n    \"No of Pregnancy\": 2,\n    \"Gestation in previous Pregnancy\": 1,\n    \"BMI\": 27.0,\n    \"HDL\": 45.0,\n    \"Family History\": 0,\n    \"unexplained prenetal loss\": 0,\n    \"Large Child or Birth Default\": 0,\n    \"PCOS\": 0,\n    \"Sys BP\": 125.0,\n    \"Dia BP\": 80,\n    \"OGTT\": null,\n    \"Hemoglobin\": 12.0,\n    \"Sedentary Lifestyle\": 0,\n    \"Prediabetes\": 0\n  },\n  \"changes\": {\"OGTT\": 120.0}\n}"
+        }
+      }
+    },
+    {
+      "name": "History",
+      "request": {"method": "GET", "url": "{{base_url}}/history?limit=10"}
+    }
+  ]
+}
