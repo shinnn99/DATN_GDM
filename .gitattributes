@@ -1,0 +1,10 @@
+# Ensure model artifacts keep LF line endings across platforms.
+# LightGBM text-format models fail to parse if CRLF is introduced.
+backend/artifacts/gdm_model.txt text eol=lf
+backend/artifacts/config.json   text eol=lf
+
+# Binary artifacts — never touch.
+*.joblib binary
+*.pkl    binary
+*.bin    binary
+*.onnx   binary
