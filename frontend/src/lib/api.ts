@@ -24,11 +24,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!res.ok) {
-    let detail: unknown;
+    const text = await res.text();
+    let detail: unknown = text;
     try {
-      detail = await res.json();
+      detail = JSON.parse(text);
     } catch {
-      detail = await res.text();
+      // keep raw text
     }
     throw new ApiError(res.status, detail);
   }
