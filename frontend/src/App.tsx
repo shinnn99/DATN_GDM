@@ -3,7 +3,6 @@ import { Layout } from "@/components/layout";
 import { Home } from "@/pages/Home";
 import { PredictPage } from "@/pages/Predict";
 import { ShapPage } from "@/pages/Shap";
-import { WhatIfPage } from "@/pages/WhatIf";
 import { HistoryPage } from "@/pages/History";
 
 function App() {
@@ -13,7 +12,6 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/predict" element={<PredictPage />} />
         <Route path="/shap" element={<ShapPage />} />
-        <Route path="/what-if" element={<WhatIfPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

@@ -6,7 +6,6 @@ import {
   History,
   PlayCircle,
   ShieldCheck,
-  Sliders,
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,13 +24,6 @@ const FEATURES = [
     title: "Giải thích bằng SHAP",
     description:
       "Waterfall đầy đủ cho từng dự đoán: feature nào tăng/giảm xác suất, đóng góp bao nhiêu.",
-  },
-  {
-    to: "/what-if",
-    icon: Sliders,
-    title: "Kịch bản What-If",
-    description:
-      "Thử thay đổi OGTT, BMI, huyết áp... để xem xác suất và mức nguy cơ thay đổi như thế nào.",
   },
   {
     to: "/history",

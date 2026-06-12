@@ -85,34 +85,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/what-if": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * What If Endpoint
-         * @description Re-predict với changes apply lên original input.
-         *
-         *     Frontend gửi:
-         *         {
-         *             "original": {<full PatientInput>},
-         *             "changes":  {"OGTT": 110, "BMI": 28}
-         *         }
-         *
-         *     Backend tự re-compute MAP và BMI_category nếu Sys BP/Dia BP/BMI thay đổi.
-         */
-        post: operations["what_if_endpoint_what_if_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/history": {
         parameters: {
             query?: never;
@@ -273,52 +245,6 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
-        /**
-         * WhatIfRequest
-         * @description Original input + changes dict.
-         *
-         *     `changes` chỉ chứa các feature muốn thay đổi (ví dụ {"OGTT": 110}).
-         *     Backend tự re-compute MAP, BMI_category nếu Sys BP/Dia BP/BMI thay đổi.
-         */
-        WhatIfRequest: {
-            original: components["schemas"]["PatientInput"];
-            /**
-             * Changes
-             * @description ví dụ: {"OGTT": 110.0, "BMI": 28}
-             */
-            changes: {
-                [key: string]: unknown;
-            };
-        };
-        /** WhatIfResponse */
-        WhatIfResponse: {
-            /** Original Prob */
-            original_prob: number;
-            /** New Prob */
-            new_prob: number;
-            /** Delta */
-            delta: number;
-            /**
-             * Original Tier
-             * @enum {string}
-             */
-            original_tier: "Thấp" | "Trung bình" | "Cao";
-            /**
-             * New Tier
-             * @enum {string}
-             */
-            new_tier: "Thấp" | "Trung bình" | "Cao";
-            /** Tier Changed */
-            tier_changed: boolean;
-            /** Changes Applied */
-            changes_applied: {
-                [key: string]: unknown;
-            };
-            /** Derived Changes */
-            derived_changes: {
-                [key: string]: unknown;
-            };
-        };
     };
     responses: never;
     parameters: never;
@@ -424,39 +350,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShapLocalResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    what_if_endpoint_what_if_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WhatIfRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WhatIfResponse"];
                 };
             };
             /** @description Validation Error */

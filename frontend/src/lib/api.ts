@@ -5,8 +5,6 @@ export type PredictResponse = components["schemas"]["PredictResponse"];
 export type ShapItem = components["schemas"]["ShapItem"];
 export type ShapLocalResponse = components["schemas"]["ShapLocalResponse"];
 export type ShapWaterfallItem = components["schemas"]["ShapWaterfallItem"];
-export type WhatIfRequest = components["schemas"]["WhatIfRequest"];
-export type WhatIfResponse = components["schemas"]["WhatIfResponse"];
 export type RiskTier = "Thấp" | "Trung bình" | "Cao";
 
 const BASE = "/api";
@@ -48,22 +46,24 @@ export const api = {
       supabase_enabled: boolean;
     }>("/info"),
 
-  predict: (patient: PatientInput) =>
-    request<PredictResponse>("/predict", {
+  predict: (
+    patient: PatientInput,
+    meta?: { patient_id?: string; patient_name?: string },
+  ) => {
+    const qs = new URLSearchParams();
+    if (meta?.patient_id) qs.set("patient_id", meta.patient_id);
+    if (meta?.patient_name) qs.set("patient_name", meta.patient_name);
+    const q = qs.toString();
+    return request<PredictResponse>(`/predict${q ? `?${q}` : ""}`, {
       method: "POST",
       body: JSON.stringify(patient),
-    }),
+    });
+  },
 
   shapLocal: (patient: PatientInput) =>
     request<ShapLocalResponse>("/shap-local", {
       method: "POST",
       body: JSON.stringify(patient),
-    }),
-
-  whatIf: (body: WhatIfRequest) =>
-    request<WhatIfResponse>("/what-if", {
-      method: "POST",
-      body: JSON.stringify(body),
     }),
 
   history: (limit = 50) =>
@@ -72,6 +72,7 @@ export const api = {
       records: Array<{
         id?: string | null;
         patient_id?: string | null;
+        patient_name?: string | null;
         created_at?: string | null;
         gdm_probability: number;
         risk_level: RiskTier;

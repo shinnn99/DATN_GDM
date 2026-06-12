@@ -1,6 +1,6 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, RotateCcw } from "lucide-react";
+import { Check, IdCard, RotateCcw, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,14 @@ import {
   type PatientFormInput,
   type PatientFormValues,
 } from "@/lib/patient-schema";
-import { FEATURE_LABELS } from "@/lib/patient-defaults";
+import { FEATURE_LABELS, FEATURE_RANGES } from "@/lib/patient-defaults";
 import type { PatientInput } from "@/lib/api";
 import { cn } from "@/lib/utils";
+
+export type PatientMeta = {
+  patient_id?: string;
+  patient_name?: string;
+};
 
 type NumericKey =
   | "Age"
@@ -62,10 +67,12 @@ const OPTIONAL_NUMERIC: ReadonlySet<NumericKey> = new Set([
 interface Props {
   submitLabel?: string;
   isSubmitting?: boolean;
-  onSubmit: (values: PatientInput) => void;
+  onSubmit: (values: PatientInput, meta: PatientMeta) => void;
   formId?: string;
   /** Compact bỏ tiêu đề nhóm để tiết kiệm không gian */
   dense?: boolean;
+  /** Hiển thị ô nhập Mã BN / Tên BN. Mặc định: true */
+  showMeta?: boolean;
 }
 
 export function PatientForm({
@@ -74,6 +81,7 @@ export function PatientForm({
   onSubmit,
   formId,
   dense,
+  showMeta = true,
 }: Props) {
   const {
     register,
@@ -85,7 +93,11 @@ export function PatientForm({
   });
 
   const submit: SubmitHandler<PatientFormValues> = (values) => {
-    onSubmit(values as PatientInput);
+    const { patient_id, patient_name, ...rest } = values;
+    onSubmit(rest as PatientInput, {
+      patient_id: patient_id?.trim() || undefined,
+      patient_name: patient_name?.trim() || undefined,
+    });
   };
 
   const hasErrors = Object.keys(errors).length > 0;
@@ -106,6 +118,59 @@ export function PatientForm({
         </div>
       )}
 
+      {showMeta && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Định danh bệnh nhân
+            </h3>
+            <span className="h-px flex-1 bg-border/70" />
+            <span className="text-[10px] text-muted-foreground/70">tuỳ chọn</span>
+          </div>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label
+                htmlFor="patient_id"
+                className="text-[11.5px] font-medium text-muted-foreground"
+              >
+                Mã bệnh nhân
+              </Label>
+              <div className="relative">
+                <IdCard className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70" />
+                <Input
+                  id="patient_id"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="VD: BN-001"
+                  {...register("patient_id")}
+                  className="h-8 pl-8 text-[13px]"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label
+                htmlFor="patient_name"
+                className="text-[11.5px] font-medium text-muted-foreground"
+              >
+                Tên bệnh nhân
+              </Label>
+              <div className="relative">
+                <User className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70" />
+                <Input
+                  id="patient_name"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="VD: Nguyễn Thị A"
+                  {...register("patient_name")}
+                  className="h-8 pl-8 text-[13px]"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {NUMERIC_GROUPS.map((group, gi) => (
         <div key={group.title} className="space-y-2">
           <div className="flex items-center gap-2">
@@ -122,6 +187,8 @@ export function PatientForm({
             {group.keys.map((k) => {
               const optional = OPTIONAL_NUMERIC.has(k);
               const err = errors[k];
+              const range = FEATURE_RANGES[k];
+              const rangeText = `${range.min} ≤ ${range.shortLabel} ≤ ${range.max}`;
               return (
                 <div key={k} className="space-y-1">
                   <Label
@@ -138,9 +205,11 @@ export function PatientForm({
                   <Input
                     id={k}
                     type="number"
-                    step="any"
-                    inputMode="decimal"
-                    placeholder="—"
+                    step={range.integer ? 1 : "any"}
+                    min={range.min}
+                    max={range.max}
+                    inputMode={range.integer ? "numeric" : "decimal"}
+                    placeholder={rangeText}
                     {...register(k, {
                       setValueAs: (v) =>
                         v === "" || v == null

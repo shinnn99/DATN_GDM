@@ -5,11 +5,8 @@ Functions:
 - assign_risk_tier: Option D — tier theo OGTT availability
 - get_top5_shap: format SHAP top-k cho frontend JSON
 - compute_shap_local: tính SHAP cho 1 sample
-- what_if: re-predict với changes
 """
 from __future__ import annotations
-
-from typing import Optional
 
 import numpy as np
 
@@ -17,11 +14,7 @@ from .model import get_registry, predict_proba
 
 
 def recompute_engineered(row: dict) -> dict:
-    """Re-compute MAP và BMI_category từ raw features.
-
-    Quan trọng cho What-If: user thay BMI=30 → BMI_category phải re-compute,
-    không thì model nhận BMI_category cũ → predict sai.
-    """
+    """Re-compute MAP và BMI_category từ raw features."""
     out = dict(row)
 
     # MAP = (SysBP + 2*DiaBP) / 3, NaN propagate nếu thiếu Sys BP
@@ -211,60 +204,4 @@ def compute_shap_waterfall(row: dict) -> dict:
         "predicted_probability": prob,
         "risk_level": assign_risk_tier(prob, has_ogtt, reg.threshold),
         "features": feature_data,
-    }
-
-
-def what_if(original_row: dict, changes: dict) -> dict:
-    """Re-predict với changes apply lên original_row.
-
-    Args:
-        original_row: input gốc (raw features)
-        changes: {feature: new_value} — chỉ feature thay đổi
-
-    Returns:
-        {original_prob, new_prob, delta, original_tier, new_tier, tier_changed,
-         changes_applied, derived_changes}
-    """
-    reg = get_registry()
-
-    # Original
-    orig = recompute_engineered(original_row)
-    orig_arr = row_dict_to_array(orig, reg.feature_names)
-    orig_prob = float(predict_proba(orig_arr)[0])
-    orig_has_ogtt = orig.get("OGTT") is not None and not (
-        isinstance(orig.get("OGTT"), float) and np.isnan(orig["OGTT"])
-    )
-    orig_tier = assign_risk_tier(orig_prob, orig_has_ogtt, reg.threshold)
-
-    # New
-    new_row = {**orig, **changes}
-    new = recompute_engineered(new_row)
-    new_arr = row_dict_to_array(new, reg.feature_names)
-    new_prob = float(predict_proba(new_arr)[0])
-    new_has_ogtt = new.get("OGTT") is not None and not (
-        isinstance(new.get("OGTT"), float) and np.isnan(new["OGTT"])
-    )
-    new_tier = assign_risk_tier(new_prob, new_has_ogtt, reg.threshold)
-
-    # Track derived feature changes
-    derived = {}
-    for k in ["MAP", "BMI_category"]:
-        orig_val = orig.get(k)
-        new_val = new.get(k)
-        orig_is_nan = isinstance(orig_val, float) and np.isnan(orig_val)
-        new_is_nan = isinstance(new_val, float) and np.isnan(new_val)
-        if orig_is_nan and new_is_nan:
-            continue
-        if orig_val != new_val:
-            derived[k] = None if new_is_nan else float(new_val)
-
-    return {
-        "original_prob": orig_prob,
-        "new_prob": new_prob,
-        "delta": new_prob - orig_prob,
-        "original_tier": orig_tier,
-        "new_tier": new_tier,
-        "tier_changed": orig_tier != new_tier,
-        "changes_applied": changes,
-        "derived_changes": derived,
     }

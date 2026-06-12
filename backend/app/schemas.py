@@ -105,28 +105,3 @@ class ShapLocalResponse(BaseModel):
     predicted_probability: float
     risk_level: Literal["Thấp", "Trung bình", "Cao"]
     features: list[ShapWaterfallItem]
-
-
-# ──────────────────────────────────────────────────────────────────────
-# /what-if request + response
-# ──────────────────────────────────────────────────────────────────────
-
-class WhatIfRequest(BaseModel):
-    """Original input + changes dict.
-
-    `changes` chỉ chứa các feature muốn thay đổi (ví dụ {"OGTT": 110}).
-    Backend tự re-compute MAP, BMI_category nếu Sys BP/Dia BP/BMI thay đổi.
-    """
-    original: PatientInput
-    changes: dict = Field(..., description='ví dụ: {"OGTT": 110.0, "BMI": 28}')
-
-
-class WhatIfResponse(BaseModel):
-    original_prob: float
-    new_prob: float
-    delta: float
-    original_tier: Literal["Thấp", "Trung bình", "Cao"]
-    new_tier: Literal["Thấp", "Trung bình", "Cao"]
-    tier_changed: bool
-    changes_applied: dict
-    derived_changes: dict

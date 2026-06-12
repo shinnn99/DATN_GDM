@@ -5,7 +5,6 @@ Routes:
 - GET  /info          — model metadata
 - POST /predict       — predict + tier + top5 SHAP
 - POST /shap-local    — full SHAP waterfall
-- POST /what-if       — re-predict với changes
 - GET  /history       — list recent predictions (Supabase or mock)
 """
 from __future__ import annotations
@@ -24,13 +23,10 @@ from .schemas import (
     PatientInput,
     PredictResponse,
     ShapLocalResponse,
-    WhatIfRequest,
-    WhatIfResponse,
 )
 from .shap_utils import (
     predict_with_explanation,
     compute_shap_waterfall,
-    what_if as run_what_if,
 )
 
 
@@ -104,6 +100,7 @@ def info():
 def predict(
     payload: PatientInput,
     patient_id: Optional[str] = Query(None, description="Optional ID để lưu DB"),
+    patient_name: Optional[str] = Query(None, description="Optional tên bệnh nhân"),
 ):
     """Predict GDM probability + risk tier + top 5 SHAP contributions.
 
@@ -123,6 +120,7 @@ def predict(
     try:
         get_store().save(
             patient_id=patient_id,
+            patient_name=patient_name,
             input_features=row,
             gdm_probability=result["gdm_probability"],
             risk_level=result["risk_level"],
@@ -151,30 +149,6 @@ def shap_local(payload: PatientInput):
         return compute_shap_waterfall(row)
     except Exception as e:
         logger.exception("SHAP local failed")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ──────────────────────────────────────────────────────────────────────
-# /what-if — task 4.5
-# ──────────────────────────────────────────────────────────────────────
-
-@app.post("/what-if", response_model=WhatIfResponse)
-def what_if_endpoint(payload: WhatIfRequest):
-    """Re-predict với changes apply lên original input.
-
-    Frontend gửi:
-        {
-            "original": {<full PatientInput>},
-            "changes":  {"OGTT": 110, "BMI": 28}
-        }
-
-    Backend tự re-compute MAP và BMI_category nếu Sys BP/Dia BP/BMI thay đổi.
-    """
-    try:
-        original_row = payload.original.to_feature_dict()
-        return run_what_if(original_row, payload.changes)
-    except Exception as e:
-        logger.exception("What-if failed")
         raise HTTPException(status_code=500, detail=str(e))
 
 

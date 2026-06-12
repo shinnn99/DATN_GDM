@@ -17,7 +17,13 @@ import { cn } from "@/lib/utils";
 
 export function PredictPage() {
   const mutation = useMutation({
-    mutationFn: api.predict,
+    mutationFn: ({
+      patient,
+      meta,
+    }: {
+      patient: Parameters<typeof api.predict>[0];
+      meta?: Parameters<typeof api.predict>[1];
+    }) => api.predict(patient, meta),
   });
 
   return (
@@ -35,7 +41,9 @@ export function PredictPage() {
         >
           <PatientForm
             isSubmitting={mutation.isPending}
-            onSubmit={(values) => mutation.mutate(values)}
+            onSubmit={(values, meta) =>
+              mutation.mutate({ patient: values, meta })
+            }
           />
         </Panel>
 

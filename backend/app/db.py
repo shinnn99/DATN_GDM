@@ -4,6 +4,7 @@ Schema bảng predictions (tạo trên Supabase trước khi dùng):
     CREATE TABLE predictions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         patient_id TEXT,
+        patient_name TEXT,
         input_features JSONB,
         gdm_probability FLOAT,
         risk_level TEXT,
@@ -32,6 +33,7 @@ class PredictionStore:
     def save(
         self,
         patient_id: Optional[str],
+        patient_name: Optional[str],
         input_features: dict,
         gdm_probability: float,
         risk_level: str,
@@ -58,6 +60,7 @@ class MockStore(PredictionStore):
     def save(
         self,
         patient_id: Optional[str],
+        patient_name: Optional[str],
         input_features: dict,
         gdm_probability: float,
         risk_level: str,
@@ -68,6 +71,7 @@ class MockStore(PredictionStore):
         record = {
             "id": rec_id,
             "patient_id": patient_id,
+            "patient_name": patient_name,
             "input_features": input_features,
             "gdm_probability": gdm_probability,
             "risk_level": risk_level,
@@ -96,6 +100,7 @@ class SupabaseStore(PredictionStore):
     def save(
         self,
         patient_id: Optional[str],
+        patient_name: Optional[str],
         input_features: dict,
         gdm_probability: float,
         risk_level: str,
@@ -104,6 +109,7 @@ class SupabaseStore(PredictionStore):
     ) -> str:
         rec = {
             "patient_id": patient_id,
+            "patient_name": patient_name,
             "input_features": input_features,
             "gdm_probability": gdm_probability,
             "risk_level": risk_level,

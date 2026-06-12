@@ -6,7 +6,6 @@ const NAV = [
   { to: "/", label: "Trang chủ", end: true },
   { to: "/predict", label: "Dự đoán" },
   { to: "/shap", label: "Giải thích SHAP" },
-  { to: "/what-if", label: "What-If" },
   { to: "/history", label: "Lịch sử" },
 ];
 
