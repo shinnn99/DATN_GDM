@@ -1,21 +1,40 @@
-import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowDown,
   ArrowUp,
   ClipboardList,
   Sparkles,
   TrendingUp,
+  User,
+  UserPlus,
+  X,
 } from "lucide-react";
 import { PatientForm } from "@/components/patient-form";
 import { RiskBadge } from "@/components/risk-badge";
 import { PageHeader, Panel } from "@/components/page-shell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import type { PredictResponse, ShapItem } from "@/lib/api";
+import type { Patient, PredictResponse, ShapItem } from "@/lib/api";
 import { FEATURE_LABELS } from "@/lib/patient-defaults";
 import { cn } from "@/lib/utils";
+import { CreatePatientDialog } from "./Patients";
 
 export function PredictPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const patientIdParam = searchParams.get("patient");
+  const [showCreate, setShowCreate] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+
+  const selectedPatient = useQuery({
+    queryKey: ["patient", patientIdParam],
+    queryFn: () => api.getPatient(patientIdParam!),
+    enabled: !!patientIdParam,
+  });
+
   const mutation = useMutation({
     mutationFn: ({
       patient,
@@ -25,6 +44,22 @@ export function PredictPage() {
       meta?: Parameters<typeof api.predict>[1];
     }) => api.predict(patient, meta),
   });
+
+  const linkedPatient = selectedPatient.data;
+  const useSnapshot = !patientIdParam;
+
+  const clearPatient = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("patient");
+    setSearchParams(next, { replace: true });
+  };
+
+  const setPatient = (id: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("patient", id);
+    setSearchParams(next, { replace: true });
+    setShowPicker(false);
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
@@ -39,11 +74,55 @@ export function PredictPage() {
           title="Thông tin bệnh nhân"
           description="OGTT có thể bỏ trống nếu chưa đo — kết quả sẽ rơi vào tier 'Trung bình' và đề nghị làm xét nghiệm."
         >
+          <div className="mb-3">
+            {linkedPatient ? (
+              <LinkedPatientBanner
+                patient={linkedPatient}
+                onClear={clearPatient}
+              />
+            ) : (
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 px-3 py-2">
+                <User className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-[12px] text-muted-foreground">
+                  Chưa gắn vào bệnh nhân nào — kết quả sẽ lưu vào lịch sử nhưng
+                  không gắn vào hồ sơ.
+                </span>
+                <div className="ml-auto flex gap-1.5">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowPicker(true)}
+                  >
+                    <User className="h-3.5 w-3.5" />
+                    Chọn bệnh nhân
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowCreate(true)}
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    Tạo mới
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <PatientForm
             isSubmitting={mutation.isPending}
-            onSubmit={(values, meta) =>
-              mutation.mutate({ patient: values, meta })
-            }
+            showMeta={useSnapshot}
+            onSubmit={(values, meta) => {
+              const apiMeta: Parameters<typeof api.predict>[1] = patientIdParam
+                ? { patient_id: patientIdParam }
+                : {
+                    patient_code: meta.patient_id,
+                    patient_name: meta.patient_name,
+                  };
+              mutation.mutate({ patient: values, meta: apiMeta });
+            }}
           />
         </Panel>
 
@@ -51,7 +130,153 @@ export function PredictPage() {
           data={mutation.data}
           error={mutation.error}
           isPending={mutation.isPending}
+          patient={linkedPatient}
         />
+      </div>
+
+      {showCreate && (
+        <CreatePatientDialog
+          onClose={() => setShowCreate(false)}
+          onCreated={(p) => {
+            setShowCreate(false);
+            setPatient(p.id);
+          }}
+        />
+      )}
+
+      {showPicker && (
+        <PatientPicker
+          onClose={() => setShowPicker(false)}
+          onPick={(p) => setPatient(p.id)}
+        />
+      )}
+    </div>
+  );
+}
+
+function LinkedPatientBanner({
+  patient,
+  onClear,
+}: {
+  patient: Patient;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent-soft/60 px-3 py-2">
+      <div className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-accent-foreground">
+        <User className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-[12.5px] font-semibold text-primary">
+          {patient.full_name}
+          {patient.code && (
+            <span className="ml-2 font-mono text-[10.5px] font-normal text-muted-foreground">
+              {patient.code}
+            </span>
+          )}
+        </div>
+        <div className="text-[11px] text-muted-foreground">
+          Kết quả khám sẽ được lưu vào hồ sơ này.
+        </div>
+      </div>
+      <div className="ml-auto flex gap-1.5">
+        <Link to={`/patients/${patient.id}`}>
+          <Button variant="outline" size="sm">
+            Xem hồ sơ
+          </Button>
+        </Link>
+        <button
+          type="button"
+          onClick={onClear}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
+          aria-label="Bỏ chọn"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PatientPicker({
+  onClose,
+  onPick,
+}: {
+  onClose: () => void;
+  onPick: (p: Patient) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const q = useQuery({
+    queryKey: ["patients", search],
+    queryFn: () => api.listPatients({ search: search || undefined, limit: 30 }),
+  });
+
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="surface-card flex max-h-[80vh] w-full max-w-md flex-col p-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-primary">
+            Chọn bệnh nhân
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <Input
+          placeholder="Tìm theo tên / mã / SĐT..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-8 text-[13px]"
+          autoFocus
+        />
+        <div className="mt-2 min-h-0 flex-1 overflow-y-auto rounded-lg border border-border/60">
+          {q.isLoading ? (
+            <div className="space-y-1 p-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-8" />
+              ))}
+            </div>
+          ) : (q.data?.items ?? []).length === 0 ? (
+            <div className="p-6 text-center text-[12.5px] text-muted-foreground">
+              Không tìm thấy bệnh nhân nào
+            </div>
+          ) : (
+            <ul className="divide-y divide-border/40">
+              {q.data!.items.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => onPick(p)}
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[13px] hover:bg-accent-soft/50"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-primary">
+                        {p.full_name}
+                      </div>
+                      <div className="truncate text-[11px] text-muted-foreground">
+                        {p.code ?? "—"}
+                        {p.phone ? ` • ${p.phone}` : ""}
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
+                      {p.prediction_count ?? 0} lần khám
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -61,10 +286,12 @@ function ResultPanel({
   data,
   isPending,
   error,
+  patient,
 }: {
   data?: PredictResponse;
   isPending: boolean;
   error: unknown;
+  patient?: Patient;
 }) {
   if (isPending) {
     return (
@@ -127,6 +354,18 @@ function ResultPanel({
         {data.recommendation && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900">
             {data.recommendation}
+          </div>
+        )}
+
+        {patient && (
+          <div className="rounded-lg border border-emerald-200/60 bg-emerald-50/60 px-3 py-2 text-[12px] text-emerald-900">
+            ✓ Đã lưu kết quả vào hồ sơ <strong>{patient.full_name}</strong>.{" "}
+            <Link
+              to={`/patients/${patient.id}`}
+              className="font-medium underline-offset-2 hover:underline"
+            >
+              Xem lịch sử khám
+            </Link>
           </div>
         )}
 

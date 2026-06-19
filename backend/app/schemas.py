@@ -105,3 +105,64 @@ class ShapLocalResponse(BaseModel):
     predicted_probability: float
     risk_level: Literal["Thấp", "Trung bình", "Cao"]
     features: list[ShapWaterfallItem]
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Patients
+# ──────────────────────────────────────────────────────────────────────
+
+class PatientCreate(BaseModel):
+    full_name: str = Field(..., min_length=1, max_length=200)
+    code: Optional[str] = Field(None, max_length=50)
+    date_of_birth: Optional[str] = Field(None, description="ISO YYYY-MM-DD")
+    phone: Optional[str] = Field(None, max_length=30)
+    note: Optional[str] = Field(None, max_length=1000)
+
+
+class PatientUpdate(BaseModel):
+    full_name: Optional[str] = Field(None, min_length=1, max_length=200)
+    code: Optional[str] = Field(None, max_length=50)
+    date_of_birth: Optional[str] = None
+    phone: Optional[str] = Field(None, max_length=30)
+    note: Optional[str] = Field(None, max_length=1000)
+
+
+class PatientOut(BaseModel):
+    id: str
+    code: Optional[str] = None
+    full_name: str
+    date_of_birth: Optional[str] = None
+    phone: Optional[str] = None
+    note: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    prediction_count: Optional[int] = None
+
+
+class PatientListResponse(BaseModel):
+    items: list[PatientOut]
+    total: int
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Prediction records (history)
+# ──────────────────────────────────────────────────────────────────────
+
+class PredictionRecord(BaseModel):
+    id: str
+    patient_id: Optional[str] = None
+    patient_code: Optional[str] = None
+    patient_name: Optional[str] = None
+    input_features: Optional[dict] = None
+    gdm_probability: float
+    risk_level: Literal["Thấp", "Trung bình", "Cao"]
+    threshold_used: float
+    has_ogtt: Optional[bool] = None
+    shap_values: Optional[list[dict]] = None
+    recommendation: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class PredictionListResponse(BaseModel):
+    items: list[PredictionRecord]
+    total: int

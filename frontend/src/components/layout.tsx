@@ -6,12 +6,13 @@ const NAV = [
   { to: "/", label: "Trang chủ", end: true },
   { to: "/predict", label: "Dự đoán" },
   { to: "/shap", label: "Giải thích SHAP" },
+  { to: "/patients", label: "Bệnh nhân" },
   { to: "/history", label: "Lịch sử" },
 ];
 
 export function Layout() {
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-full flex-col">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="container flex h-14 items-center justify-between gap-4">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
@@ -41,7 +42,7 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="container flex min-h-0 flex-1 flex-col py-4 lg:py-6">
+      <main className="container flex flex-1 flex-col py-4 lg:py-6">
         <Outlet />
       </main>
 

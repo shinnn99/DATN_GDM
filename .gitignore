@@ -4,8 +4,10 @@
 .env.*.local
 *.pem
 *.key
+.mcp.json
 !backend/.env.example
 !frontend/.env.example
+!.mcp.json.example
 
 # ===== Python =====
 __pycache__/
